@@ -1,0 +1,177 @@
+.container-image-active header {
+	background: rgba(0, 0, 0, 0.6);
+	position: absolute;
+	color: #FFFFFF;
+	margin: 0;
+	z-index: 100;
+}
+svg#image_active {
+	opacity: 0;
+}
+.container-image-active footer {
+	background: rgba(0, 0, 0, 0.6);
+	position: absolute;
+	color: #FFFFFF;
+	margin: 0;
+	z-index: 100;
+}
+.container-image-active #main-title {
+	position: static;
+	white-space: nowrap;
+	display: inline-block;
+	overflow: hidden;
+}
+.container-image-active .scroll-arrow {
+	position: static;
+	display: inline-block;
+	cursor: pointer;
+	vertical-align: top;
+}
+.container-image-active img.scroll-arrow {
+	vertical-align: baseline;
+}
+.container-image-active footer div {
+	position: static;
+}
+.bouton-footer-handle {
+	z-index: 200;
+	bottom: 0;
+	position: absolute;
+}
+.bouton-header-handle {
+	z-index: 200;
+	top: 0;
+	position: absolute;
+}
+.bouton-header-handle  > svg, .bouton-footer-handle  > svg, #credit-panel > span > svg {
+	width: 100%;
+	height: 100%;
+}
+#credit-panel > span {
+	display: block;
+}
+.container-image-active > footer > div {
+	text-align: center;
+	color: #000000;
+}
+.container-image-active > header > div {
+	float: right;
+}
+.container-image-active > header > div > span {
+	float: right;
+}
+.container-image-active footer > div > span, .container-image-active header > div > span {
+	background-image: linear-gradient(bottom, rgb(190,190,190) 43%, rgb(254,254,254) 100%);
+	background-image: -o-linear-gradient(bottom, rgb(190,190,190) 43%, rgb(254,254,254) 100%);
+	background-image: -moz-linear-gradient(bottom, rgb(190,190,190) 43%, rgb(254,254,254) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgb(190,190,190) 43%, rgb(254,254,254) 100%);
+	background-image: -ms-linear-gradient(bottom, rgb(190,190,190) 43%, rgb(254,254,254) 100%);
+	filter: progid :DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#ffffff', endColorstr='#000000');
+	background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.43, rgb(190,190,190)),
+	color-stop(1, rgb(254,254,254))
+	);
+	background-origin: border-box;
+	background-position: 0 0;
+	background-size: auto auto;
+	border-radius: 0.1em;
+	cursor: pointer;
+}
+.container-image-active footer > div > span {
+	font-family: Arial;
+	margin: 0px 0.2em;
+	width: 1em;
+	padding: 0.1em;
+	display: inline-block;
+}
+#previous_detail.disabled, #next_detail.disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+#previous_detail, #next_detail, .container-image-active footer > div > span {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+#previous_detail:not(.disabled):hover, #next_detail:not(.disabled):hover, .container-image-active footer > div > span.emphasized, .container-image-active > header > div > span.emphasized {
+	color: #000000;
+	background-image: linear-gradient(bottom, rgb(117,117,117) 10%, rgb(156,156,156) 55%, rgb(201,201,201) 90%);
+	background-image: -o-linear-gradient(bottom, rgb(117,117,117) 10%, rgb(156,156,156) 55%, rgb(201,201,201) 90%);
+	background-image: -moz-linear-gradient(bottom, rgb(117,117,117) 10%, rgb(156,156,156) 55%, rgb(201,201,201) 90%);
+	background-image: -webkit-linear-gradient(bottom, rgb(117,117,117) 10%, rgb(156,156,156) 55%, rgb(201,201,201) 90%);
+	background-image: -ms-linear-gradient(bottom, rgb(117,117,117) 10%, rgb(156,156,156) 55%, rgb(201,201,201) 90%);
+	background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.1, rgb(117,117,117)),
+	color-stop(0.55, rgb(156,156,156)),
+	color-stop(0.9, rgb(201,201,201))
+	);
+}
+.container-image-active footer > div > span:hover {
+
+}
+.container-image-active {
+	position: relative;
+	overflow: hidden;
+	height: 100%;
+	width: 100%;
+}
+.container-image-active > .bouton-footer-handle, .container-image-active > .bouton-header-handle {
+	position: absolute;
+	cursor: pointer;
+}
+body {
+	overflow: hidden;
+	margin: 0;
+	background-color: #000000;
+}
+.detail {
+	cursor: pointer;
+}
+.caption_box {
+	position: absolute;
+	background: rgba(0, 0, 0, 0.6);
+	position: absolute;
+	color: #FFFFFF;
+	border: 5px solid #FFFFFF;
+	z-index: 300;
+}
+.caption_text {
+	color: #FFFFFF !important;
+}
+.caption_text a {
+	color: #CCCCFF;
+}
+.caption_title {
+	overflow-y: auto;
+	color: #FFFFFF !important;
+}
+image.emphasized {
+	border: thin solid #CC0000;
+}
+.caption_box > span, .caption_box > img {
+	float: right;
+	cursor: pointer;
+}
+.caption_box > span >svg {
+	width: 100%;
+	height: 100%;
+}
+#credit-panel > .close-button {
+	position: absolute;
+	cursor: pointer;
+}
+#credit-panel {
+	position: absolute;
+}
+.keypad-popup { 
+	z-index: 400 !important;
+}
