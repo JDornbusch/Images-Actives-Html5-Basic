@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+<project name="embedded version build" default="create_widget" basedir="../">
+	<property name="export.dir" value="${basedir}/export" />
+	<property name="js.dir" value="${basedir}/js" />
+	<property name="icons.dir" value="${basedir}/img" />
+	<property name="tools.dir" value="${basedir}/build/tools" />
+	<property name="css.dir" value="${basedir}/css" />
+	<property name="pictures.dir" value="${basedir}/pictures" />
+	<property name="htmlskeleton.file" value="embed_version_skeleton.html" />
+	<property name="jsskeleton.file" value="${js.dir}/embedscriptskeleton.js" />
+	<property name="svg.file" value="${pictures.dir}/louis.svg" />
+	<property name="bmp.file" value="${pictures.dir}/louis.png" />
+	<property name="export.file" value="${export.dir}/louis.html" />
+	<property name="prov.script.file" value="${export.dir}/jsprov.js" />
+	<property name="prov.svg.file" value="${export.dir}/svgprov.svg" />
+	<property name="prov.b64.file" value="${export.dir}/b64prov.svg" />
+	<property name="prov.options.file" value="${export.dir}/xmlprov.xml" />
+	<property name="options.file" value="${basedir}/options.xml" />
+	<property name="widget.dir" value="${export.dir}/ia.wdgt" />
+	<property name="plist.file" value="${basedir}/build/Info.plist" />
+	<taskdef name="for" classname="net.sf.antcontrib.logic.ForTask">
+		<classpath>
+			<pathelement location="${tools.dir}/ant-contrib-1.0b3.jar" />
+		</classpath>
+
+	</taskdef>
+	<taskdef name="var" classname="net.sf.antcontrib.property.Variable">
+		<classpath>
+			<pathelement location="${tools.dir}/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+	<target name="build">
+		<delete file="${export.file}" />
+		
+
+		<copy file="${basedir}/${htmlskeleton.file}" tofile="${export.file}" />
+		<copy file="${jsskeleton.file}" tofile="${prov.script.file}" />
+		<copy file="${options.file}" tofile="${prov.options.file}" />
+		<copy file="${svg.file}" tofile="${prov.svg.file}" />
+		<loadfile property="jqcontent" srcfile="${js.dir}/libs/jquery-1.7.1.js">
+		</loadfile>
+		<loadfile property="iacontent" srcfile="${js.dir}/mylibs/imagesactivesbasic.js">
+		</loadfile>
+		<loadfile property="css" srcfile="${basedir}/styles.css">
+		</loadfile>
+		<loadfile property="iacss" srcfile="${css.dir}/iabasicstyles.css">
+		</loadfile>
+
+		<for param="file">
+			<path>
+				<fileset dir="${icons.dir}" includes="*.svg" />
+			</path>
+			<sequential>
+				<var name="content" unset="true"/>
+				<loadfile property="content" srcfile="@{file}" />
+				<replace file="${export.file}" token="[ICONS]" value="${content}[ICONS]" />
+			</sequential>
+		</for>
+		<replace file="${export.file}" token="[ICONS]" value="" />
+		<replace file="${export.file}" token="[STYLES]" value="${css}" />
+		<replace file="${export.file}" token="[IASTYLES]" value="${iacss}" />
+		<replace file="${export.file}" token="[JQUERY]" value="${jqcontent}" />
+		<replace file="${export.file}" token="[IMAGES-ACTIVES]" value="${iacontent}" />
+
+
+		<replaceregexp file="${prov.script.file}" match="[\n\r\t]" flags="g" replace="" />
+		<replaceregexp file="${prov.options.file}" match="[\n\r\t]" flags="g" replace="" />
+		<replaceregexp file="${prov.options.file}" match="[']" flags="g" replace="\\\\'" />
+		<loadfile property="options" srcfile="${prov.options.file}">
+		</loadfile>
+		<replace file="${prov.script.file}" token="[XML]" value="${options}" />
+		<loadfile property="script" srcfile="${prov.script.file}">
+		</loadfile>
+		<replace file="${export.file}" token="[SCRIPT]" value="${script}" />
+		<replace file="${export.file}" token="[IMAGES-ACTIVES]" value="${iacontent}" />
+
+		<exec executable="${tools.dir}/base64.exe">
+			<arg value="-e" />
+			<arg value="${bmp.file}" />
+			<arg value="${prov.b64.file}" />
+		</exec>
+		<loadfile property="b64" srcfile="${prov.b64.file}">
+		</loadfile>
+		<replace file="${prov.svg.file}" token="[BASE64]" value="${b64}" />
+		<loadfile property="svgcontent" srcfile="${prov.svg.file}">
+		</loadfile>
+		<replace file="${export.file}" token="[SVG]" value="${svgcontent}" />
+		<delete file="${prov.script.file}" />
+		<delete file="${prov.options.file}" />
+		<delete file="${prov.svg.file}" />
+		<delete file="${prov.b64.file}" />
+
+	</target>
+	<target name="create_widget" depends="build">
+		<mkdir dir="${widget.dir}"/>
+		<copy file="${export.file}" tofile="${widget.dir}/main.html"/>
+		<copy file="${bmp.file}" tofile="${widget.dir}/Default.png"/>
+		<copy file="${plist.file}" todir="${widget.dir}"/>
+	</target>
+
+</project>
