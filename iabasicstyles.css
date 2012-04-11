@@ -84,7 +84,7 @@ svg#image_active {
 	font-family: Arial;
 	margin: 0px 0.2em;
 	width: 1em;
-	padding: 0.1em;
+	padding: 0.2em;
 	display: inline-block;
 }
 #previous_detail.disabled, #next_detail.disabled {
@@ -171,6 +171,8 @@ image.emphasized {
 }
 #credit-panel {
 	position: absolute;
+	z-index: 1000;
+	cursor: pointer;
 }
 .keypad-popup { 
 	z-index: 400 !important;

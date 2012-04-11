@@ -13,9 +13,9 @@
    id="bouton-footer-handle-down"
    x="0px"
    y="0px"
-   width="60.458"
-   height="69.5"
-   viewBox="363.333 481.375 60.458 69.5"
+   width="59.999996"
+   height="59.999996"
+   viewBox="363.333 481.375 59.999996 59.999996"
    enable-background="new 363.333 481.375 74.667 69.583"
    xml:space="preserve"
    inkscape:version="0.48.1 "
@@ -23,7 +23,7 @@
    id="metadata30"><rdf:RDF><cc:Work
        rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
          rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
-   id="defsdegrade_bfhd"></defs><sodipodi:namedview
+   id="defsdegrade_bfhd" /><sodipodi:namedview
    pagecolor="#ffffff"
    bordercolor="#666666"
    borderopacity="1"
@@ -37,12 +37,12 @@
    id="namedview26"
    showgrid="false"
    inkscape:zoom="4"
-   inkscape:cx="12.343961"
-   inkscape:cy="33.398587"
-   inkscape:window-x="1325"
-   inkscape:window-y="159"
+   inkscape:cx="12.34396"
+   inkscape:cy="33.398586"
+   inkscape:window-x="1154"
+   inkscape:window-y="167"
    inkscape:window-maximized="0"
-   inkscape:current-layer="Calque_1"
+   inkscape:current-layer="bouton-footer-handle-down"
    showguides="true"
    inkscape:guide-bbox="true"
    fit-margin-top="0"
@@ -54,14 +54,14 @@
 
 
 <path
-   d="m 423.541,550.625 h -59.958 v -66 c 0,-1.657 1.343,-3 3,-3 h 53.958 c 1.657,0 3,1.343 3,3 v 66 z"
+   d="m 423.10159,541.14359 h -59.53718 v -56.94861 c 0,-1.42975 1.33357,-2.58857 2.97894,-2.58857 h 53.5793 c 1.64537,0 2.97894,1.15882 2.97894,2.58857 v 56.94861 z"
    id="path14"
    inkscape:connector-curvature="0"
-   style="fill:#e6e6e6;stroke:#919090;stroke-width:0.50000000000000000" />
+   style="fill:#e6e6e6;stroke:#919090;stroke-width:0.46281791" />
 <polygon
    points="390.896,536.375 409.896,536.375 399.875,545.396 "
    id="polygon16"
-   transform="matrix(1,0,0,-0.99940312,-7.8618359,1081.4498)"
+   transform="matrix(1,0,0,-0.99940312,-7.8618369,1032.9498)"
    style="fill:#494949" />
 
 

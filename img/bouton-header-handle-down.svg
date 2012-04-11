@@ -7,20 +7,43 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.1"
    id="bouton-header-handle-down"
    x="0px"
    y="0px"
-   width="60.458717"
-   height="69.698639"
-   viewBox="363.333 481.375 60.458717 69.698639"
+   width="60"
+   height="60"
+   viewBox="363.333 481.375 60 60"
    enable-background="new 363.333 481.375 74.667 69.583"
    xml:space="preserve"
    inkscape:version="0.48.1 "
-   sodipodi:docname="bouton-header-handle-down.svg">
+   sodipodi:docname="bouton-header-handle-down.svg"><defs
+   id="defs9" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="876"
+   inkscape:window-height="480"
+   id="namedview7"
+   showgrid="false"
+   fit-margin-top="0"
+   fit-margin-left="0"
+   fit-margin-right="0"
+   fit-margin-bottom="0"
+   inkscape:zoom="3.7446929"
+   inkscape:cx="30.218609"
+   inkscape:cy="34.849319"
+   inkscape:window-x="331"
+   inkscape:window-y="225"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="bouton-header-handle-down" />
 	<metadata
    id="metadata30">
 		<rdf:RDF>
@@ -34,19 +57,19 @@
 	</metadata>
 	<polygon
    display="none"
-   points="364.25,535.583 436.958,535.583 430.792,551.375 372.042,551.292 "
+   points="436.958,535.583 430.792,551.375 372.042,551.292 364.25,535.583 "
    id="polygon7"
    style="fill:#ffffff;display:none"
-   transform="translate(-7.8756417,0.00409811)" />
+   transform="translate(-7.8863917,-9.6945408)" />
 	<path
-   d="m 423.54136,481.62536 h -59.958 v 66.18933 c 0,1.66176 1.343,3.00859 3,3.00859 h 53.958 c 1.657,0 3,-1.34683 3,-3.00859 v -66.18933 z"
+   d="m 423.09085,481.60641 h -59.53719 v 56.94862 c 0,1.42976 1.33358,2.58856 2.97894,2.58856 h 53.5793 c 1.64537,0 2.97895,-1.1588 2.97895,-2.58856 v -56.94862 z"
    id="path14"
-   style="fill:#e6e6e6;stroke:#919090;stroke-width:0.50071657000000003"
+   style="fill:#e6e6e6;stroke:#919090;stroke-width:0.46281794"
    inkscape:connector-curvature="0" />
 	<polygon
    points="390.896,536.375 409.896,536.375 399.875,545.396 "
    id="polygon16"
-   transform="matrix(1,0,0,-0.99940312,-7.8614776,1081.5369)"
+   transform="matrix(1,0,0,-0.99940312,-7.8722276,1071.8383)"
    style="fill:#494949" />
 	
 	

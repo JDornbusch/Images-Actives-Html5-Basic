@@ -38,7 +38,7 @@ Online demos
 
 *   Web version, discovery mode, with zoom  : http://images-actives.crdp-versailles.fr/images_actives/html5/sauvetage.html
 
-*   Web version, discovery mode, with zoom  : http://images-actives.crdp-versailles.fr/images_actives/html5/gouffre.html
+*   Web version, quiz mode, with zoom  : http://images-actives.crdp-versailles.fr/images_actives/html5/gouffre.html
 
 *   Compressed version (one file), discovery mode, with zoom : http://images-actives.crdp-versailles.fr/images_actives/html5/export/louis.html
 

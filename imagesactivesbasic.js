@@ -4,37 +4,41 @@ jQuery.fn.imagesActivesBasic = function(method) {
 			var $element = $(this);
 			this.imagesActivesBasic.settings = jQuery.extend({},
 					this.imagesActivesBasic.defaults, options);
-			if (options.deploymentMode == "embed") {
+			if (options.options) {
 				var xml = jQuery.fn.imagesActivesBasic
 						.xmlConversion(options.options);
 				return this.each(function() {
 					$element.imagesActivesBasic("createObjects", xml);
 				});
-			}
+			} else if (options.optionsFile)
+				return this
+						.each(function() {
+							jQuery
+									.ajax({
+										type : "GET",
+										url : options.optionsFile,
+										dataType : "xml",
+										context : $element,
+										success : function(data) {
+											$element.imagesActivesBasic(
+													"createObjects", data);
+										},
+										error : function(jqXHR, textStatus,
+												errorThrown) {
+											jQuery.error('response: '
+													+ jqXHR.responseText);
+											jQuery
+													.error('code: '
+															+ jqXHR
+																	.getResponseHeader('X-Subscriber-Status'));
+										}
 
-			return this
-					.each(function() {
-						jQuery
-								.ajax({
-									type : "GET",
-									url : options.optionsFile,
-									dataType : "xml",
-									context : $element,
-									success : function(data) {
-										$element.imagesActivesBasic(
-												"createObjects", data)
-									},
-									error : function(jqXHR, textStatus,
-											errorThrown) {
-										alert('response: ' + jqXHR.responseText);
-										alert('code: '
-												+ jqXHR
-														.getResponseHeader('X-Subscriber-Status'));
-									}
+									});
 
-								});
-
-					});
+						});
+			else
+				jQuery
+						.error('You must provide options in xml format either as a file or as plain text.');
 		},
 		createObjects : function(data) {
 			var dao = new jQuery.fn.imagesActivesBasic.DAO(this, data);
@@ -42,7 +46,7 @@ jQuery.fn.imagesActivesBasic = function(method) {
 			var control = new jQuery.fn.imagesActivesBasic.Control(ui, dao);
 
 		}
-	}
+	};
 	if (methods[method]) {
 		return methods[method].apply(this, Array.prototype.slice.call(
 				arguments, 1));
@@ -52,7 +56,7 @@ jQuery.fn.imagesActivesBasic = function(method) {
 		jQuery.error('Method "' + method
 				+ '" does not exist in imagesActivesBasic plugin!');
 	}
-}
+};
 jQuery.fn.imagesActivesBasic.xmlConversion = function(xmlData) {
 	if (window.ActiveXObject) {
 		xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
@@ -65,11 +69,11 @@ jQuery.fn.imagesActivesBasic.xmlConversion = function(xmlData) {
 		xmlDoc = parser.parseFromString(xmlData, "text/xml");
 		return xmlDoc;
 	}
-}
+};
 jQuery.fn.imagesActivesBasic.patterns = {
 	DETAIL : /^detail\d+$/,
 	NAVBAR_KEY : /^index_detail\d+$/
-}
+};
 jQuery.fn.imagesActivesBasic.defaults = {
 	unity : 0.03,
 	panels_hiding_delay : 3000,
@@ -79,10 +83,13 @@ jQuery.fn.imagesActivesBasic.defaults = {
 	zoom_margin : 6,
 	zoom_interpolation_frames : 10,
 	credit_image_proportion : 0.85,
-	details_navbar_max_item : 4,
-	deploymentMode : "noembed"
-
-}
+	details_navbar_max_item : 5,
+	embedBitmaps : "noembed",
+	embedSvgIcons : "noembed",
+	topBar : 0,
+	handleOpacity : 0.7,
+	details_hover_animation_delay : 400
+};
 jQuery.fn.imagesActivesBasic.settings = {};
 jQuery.fn.imagesActivesBasic.DAO = function(element, data) {
 	this.svg = element[0];
@@ -90,16 +97,16 @@ jQuery.fn.imagesActivesBasic.DAO = function(element, data) {
 	this.data = this.getElementByTagNameNSPortable(this.data, "images_actives",
 			"project");
 	this.collectInformation();
-}
+};
 jQuery.fn.imagesActivesBasic.DAO.namespaces = {
 	images_actives : "http://www.crdp.ac_versailles.fr/2011/images_actives",
 	quiz : "http://www.crdp.ac_versailles.fr/2011/images_actives/behaviors/quiz",
 	discovery : "http://www.crdp.ac_versailles.fr/2011/images_actives/behaviors/discovery",
 };
 jQuery.fn.imagesActivesBasic.DAO.OVERALL_DESCRIPTION = "overall_description";
-jQuery.fn.imagesActivesBasic.DAO.SCHEMA_LIENS_AVEC_ESPACES_APRES_AROBASE = /([^@]+)@\s+([^\}]*[^\s\}])\s*\}/;
-jQuery.fn.imagesActivesBasic.DAO.SCHEMA_LIENS_AVEC_ESPACES_A_LA_FIN = /([^@]+)@\s*([^\}]*[^\s\}])\s+\}/;
-jQuery.fn.imagesActivesBasic.DAO.SCHEMA_LIENS = /\{([^@]*[^\s@])@([^\}]*[^\s\}@])\}/;
+jQuery.fn.imagesActivesBasic.DAO.LINK_WITH_SPACE_AFTER_AROBASE_PATTERN = /([^@]+)@\s+([^\}]*[^\s\}])\s*\}/;
+jQuery.fn.imagesActivesBasic.DAO.LINK_WITH_FINAL_SPACE_PATTERN = /([^@]+)@\s*([^\}]*[^\s\}])\s+\}/;
+jQuery.fn.imagesActivesBasic.DAO.LINK_PATTERN = /\{([^@]*[^\s@])@([^\}]*[^\s\}@])\}/;
 jQuery.fn.imagesActivesBasic.DAO.prototype = {
 	getTitle : function() {
 		return this.title;
@@ -127,9 +134,13 @@ jQuery.fn.imagesActivesBasic.DAO.prototype = {
 			default:
 				if (node && node.id) {
 					if (node.id
-							.match(jQuery.fn.imagesActivesBasic.patterns.DETAIL))
-						this.extractDetailInformation(node);
-					else if (node.nodeName == "image"
+							.match(jQuery.fn.imagesActivesBasic.patterns.DETAIL)) {
+						if (this.hasOnlyEmptyText(node))
+							node.setAttribute("empty", "empty");
+						else
+							this.extractDetailInformation(node);
+
+					} else if (node.nodeName == "image"
 							&& node.id == "background")
 						this.extractBackgroundInformation(node);
 				}
@@ -137,6 +148,17 @@ jQuery.fn.imagesActivesBasic.DAO.prototype = {
 				break;
 			}
 		}
+	},
+	hasOnlyEmptyText : function(node) {
+		return node
+				&& node.tagName != "image"
+				&& node.childElementCount == 2
+				&& node.getElementsByTagName("title").length == 1
+				&& node.getElementsByTagName("desc").length == 1
+				&& node.getElementsByTagName("title")[0].textContent
+						.match(/^\s*$/)
+				&& node.getElementsByTagName("desc")[0].textContent
+						.match(/^\s*$/);
 	},
 	extractDetailInformation : function(node) {
 		var titleNode = node.getElementsByTagName("title")[0];
@@ -156,14 +178,13 @@ jQuery.fn.imagesActivesBasic.DAO.prototype = {
 	insertLinks : function(text) {
 		text = this
 				.replaceByLink(
-						jQuery.fn.imagesActivesBasic.DAO.SCHEMA_LIENS_AVEC_ESPACES_APRES_AROBASE,
-						text);
-		text = this
-				.replaceByLink(
-						jQuery.fn.imagesActivesBasic.DAO.SCHEMA_LIENS_AVEC_ESPACES_A_LA_FIN,
+						jQuery.fn.imagesActivesBasic.DAO.LINK_WITH_SPACE_AFTER_AROBASE_PATTERN,
 						text);
 		text = this.replaceByLink(
-				jQuery.fn.imagesActivesBasic.DAO.SCHEMA_LIENS, text);
+				jQuery.fn.imagesActivesBasic.DAO.LINK_WITH_FINAL_SPACE_PATTERN,
+				text);
+		text = this.replaceByLink(
+				jQuery.fn.imagesActivesBasic.DAO.LINK_PATTERN, text);
 		return text;
 	},
 	replaceByLink : function(pattern, text) {
@@ -191,7 +212,7 @@ jQuery.fn.imagesActivesBasic.DAO.prototype = {
 			rights : this.extractMetadataNodeContent(node, "rights", true),
 			creator : this.extractMetadataNodeContent(node, "creator", true),
 			date : this.extractMetadataNodeContent(node, "date")
-		}
+		};
 		jQuery(node).empty();
 	},
 	getMetadataTitle : function() {
@@ -293,7 +314,7 @@ jQuery.fn.imagesActivesBasic.UI.buttons = {
 	DETAILS : "details",
 	METADATA : "metadata",
 	DESCRIPTION : "description"
-}
+};
 jQuery.fn.imagesActivesBasic.UI.svgNS = "http://www.w3.org/2000/svg";
 jQuery.fn.imagesActivesBasic.userEvents = {
 	HOVER_DETAIL : "hover_detail",
@@ -311,7 +332,7 @@ jQuery.fn.imagesActivesBasic.userEvents = {
 	VALID_PASSWORD : "valid_password",
 	STOP_HEADER_AUTOMATIC_REMOVAL : "stop_header_automatic_removal",
 	STOP_FOOTER_AUTOMATIC_REMOVAL : "stop_footer_automatic_removal"
-}
+};
 jQuery.fn.imagesActivesBasic.pcEvents = [ "mousedown", "mouseover", "mouseout" ];
 jQuery.fn.imagesActivesBasic.mobileEvents = [ "touchstart", "touchmove",
 		"gesturestart", "gesturechange", "gestureend" ];
@@ -321,10 +342,12 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 				.test(navigator.userAgent.toLowerCase()));
 	},
 	handleResize : function() {
-		// window.addEventListener(this.mobile ? "orientationchange" : "resize",
-		// jQuery.proxy(this, "fitToViewport"), true);
-		window.addEventListener("resize", jQuery.proxy(this, "fitToViewport"),
-				true);
+		if (this.mobile)
+			window.addEventListener(this.mobile ? "orientationchange"
+					: "resize", jQuery.proxy(this, "fitToViewport"), true);
+		else
+			window.addEventListener("resize", jQuery.proxy(this,
+					"fitToViewport"), true);
 	},
 	wrapSVG : function() {
 		this.container = jQuery(document.createElement("div"));
@@ -404,12 +427,12 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 				.toggleClass(
 						"disabled",
 						this.firstNavbarButtonDisplayed > (buttons.length - 2 - jQuery.fn.imagesActivesBasic.settings.details_navbar_max_item));
-		for ( var int = 1; int < buttons.length - 1; int++) {
-			$(buttons[int])
+		for ( var i = 1; i < buttons.length - 1; i++) {
+			$(buttons[i])
 					.toggle(
-							int >= this.firstNavbarButtonDisplayed
-									&& int < this.firstNavbarButtonDisplayed
-											+ jQuery.fn.imagesActivesBasic.settings.details_navbar_max_item)
+							i >= this.firstNavbarButtonDisplayed
+									&& i < this.firstNavbarButtonDisplayed
+											+ jQuery.fn.imagesActivesBasic.settings.details_navbar_max_item);
 		}
 	},
 	navigateInNavbar : function(offset) {
@@ -430,26 +453,28 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		var spaces = new Object();
 		spaces["up"] = {
 			width : this.imageWidth,
-			height : dimensions.top,
+			height : Math.max(0, dimensions.top),
 			top : 0,
 			left : 0
 
 		};
 		spaces["down"] = {
 			width : this.imageWidth,
-			height : this.imageHeight - dimensions.bottom,
-			top : dimensions.bottom,
+			height : this.imageHeight
+					- Math.min(this.imageHeight, dimensions.bottom),
+			top : Math.max(0, dimensions.bottom),
 			left : 0
 
 		};
 		spaces["right"] = {
-			width : this.imageWidth - dimensions.right,
+			width : this.imageWidth
+					- Math.min(dimensions.right, this.imageWidth),
 			height : this.imageHeight,
 			top : 0,
-			left : dimensions.right
+			left : Math.max(0, dimensions.right)
 		};
 		spaces["left"] = {
-			width : dimensions.left,
+			width : Math.max(0, dimensions.left),
 			height : this.imageHeight,
 			top : 0,
 			left : 0
@@ -459,7 +484,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		var space = 0;
 		for ( var i in spaces) {
 			space = spaces[i].width * spaces[i].height;
-			if (space > maxSpace) {
+			if (space >= maxSpace) {
 				key = i;
 				maxSpace = space;
 			}
@@ -471,7 +496,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 				left : 0,
 				width : this.imageWidth,
 				height : this.imageHeight * 0.5
-			}
+			};
 		else
 			this.detailsCaptionsAvailableSpace[detailId] = spaces[key];
 	},
@@ -537,21 +562,33 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		this.shader.setAttributeNS(null, "width", this.imageWidth);
 		this.shader.setAttributeNS(null, "height", this.imageHeight);
 		this.shader.setAttributeNS(null, "style", "fill:#000000");
-		this.svg.appendChild(this.shader);
+		$(this.shader).insertAfter(this.background);
 	},
 	displayShader : function(color, opacity, detailId) {
 		this.shader.setAttributeNS(null, "style", "fill:#"
 				+ color.replace("0x", ""));
-		this.shader.setAttribute("opacity", opacity);
 		this.shader.setAttribute("visibility", "visible");
-		this.svg.insertBefore(this.shader, this.detailNodes[detailId]);
+		$(this.shader).attr("opacity", 0);
+		$(this.shader).animate({"opacity":opacity}, jQuery.fn.imagesActivesBasic.settings.details_hover_animation_delay);
+		
 	},
 	hideShader : function() {
 		this.shader.setAttribute("visibility", "hidden");
 	},
 	fitToViewport : function(e) {
+		var containerHeight = window.innerHeight;
+		this.topMargin = 0;
+		var problemWithIPadIBooksBar = (this.imageHeight / this.imageWidth) > (1024 / 768);
+		if (problemWithIPadIBooksBar
+				&& jQuery.fn.imagesActivesBasic.settings.topBar > 0
+				&& this.imageHeight
+						+ jQuery.fn.imagesActivesBasic.settings.topBar > 1024) {
+			containerHeight = window.innerHeight
+					- jQuery.fn.imagesActivesBasic.settings.topBar;
+			this.topMargin = jQuery.fn.imagesActivesBasic.settings.topBar;
+		}
 		this.scaleFactor = Math.min(window.innerWidth / this.imageWidth,
-				window.innerHeight / this.imageHeight);
+				containerHeight / this.imageHeight);
 		this.unity = parseFloat(this.baseUnity) * parseFloat(this.scaleFactor);
 		this.scale();
 		this.center();
@@ -573,6 +610,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 				- this.unity / 2);
 		this.header.css("padding", (this.unity / 4) + "px");
 		this.header.css("font-size", this.unity * 1.5);
+		this.header.css("height", this.unity * 2.5);
 
 		if (!this.headerVisible)
 			this.header.css("top", -this.header.height() - this.unity);
@@ -583,13 +621,14 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 			icon.css("width", this.unity * 1.5);
 			icon.css("height", this.unity * 1.5);
 			button.css("margin-left", this.unity * 0.5);
+			button.css("margin-top", this.unity * 0.25);
 			button.css("width", this.unity * 1.5);
 			button.css("height", this.unity * 1.5);
 			button.css("padding", this.unity * 0.15);
 		}
 		if (this.mobile)
 			this.title.css("overflow-x", "auto");
-		var leftSpace = this.title.height() + this.unity;
+		var leftSpace = this.unity * 4.5;
 		this.titleWidth = this.header.width()
 				- this.headerButtonContainer.width() - leftSpace - this.unity
 				/ 2;
@@ -609,10 +648,8 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 			this.title.width(this.titleWidth);
 		}
 
-		this.headerHandleUp.width(this.unity * 2.5);
-		this.headerHandleUp.height(this.unity * 4);
-		this.headerHandleDown.width(this.unity * 2.5);
-		this.headerHandleDown.height(this.unity * 4);
+		this.headerHandleUp.height(this.unity * 3.5);
+		this.headerHandleDown.height(this.unity * 3.5);
 		this.headerHandleUp.css("left", this.unity / 2);
 
 		this.headerHandleDown.css("left", this.unity / 2);
@@ -623,8 +660,8 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 	scrollTitle : function(direction) {
 		if (this.scrollMotion)
 			clearInterval(this.scrollMotion);
-		this.showArrow("left", direction != "left")
-		this.showArrow("right", direction == "left")
+		this.showArrow("left", direction != "left");
+		this.showArrow("right", direction == "left");
 
 		if (direction == "left") {
 			this.title.scrollLeft(0);
@@ -671,10 +708,9 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		this.footer.css("bottom", 0);
 		this.footer.css("padding", (this.unity / 4) + "px");
 		this.footer.css("font-size", this.unity * 1.5);
-		this.footerHandleUp.width(this.unity * 2.5);
-		this.footerHandleDown.width(this.unity * 2.5);
-		this.footerHandleUp.height(this.unity * 4);
-		this.footerHandleDown.height(this.unity * 4);
+		this.footer.css("height", this.unity * 2.5);
+		this.footerHandleUp.height(this.unity * 3.5);
+		this.footerHandleDown.height(this.unity * 3.5);
 
 		this.footerHandleUp.css("left", this.unity / 2);
 		this.footerHandleDown.css("left", this.unity / 2);
@@ -687,6 +723,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 	resizeCreditPanel : function() {
 		if (!this.creditPanel.is(":visible"))
 			return;
+		this.evaluateProportions();
 		if (this.resizeImageByWidth) {
 			this
 					.flexibleWidth(
@@ -717,9 +754,10 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 
 		}
 		this.creditPanel.css("left", ($(this.svg).width() - this.creditImage
-				.width()) / 2)
+				.width()) / 2);
 		this.creditPanel.css("top", ($(this.svg).height() - this.creditImage
-				.height()) / 2)
+				.height()) / 2);
+		this.creditPanel.css("height", this.creditImage.height());
 		this.creditPanelCloseButton.css("top", this.unity / 2);
 		this.creditPanelCloseButton.css("right", this.unity / 2);
 		this.creditPanelCloseButton.css("width", this.unity * 1.5);
@@ -746,21 +784,21 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		this.creditPanelCloseButton = this.createVectorImage("close");
 		this.creditPanelCloseButton.attr("class", "close-button");
 		this.creditImage = this.createVectorImage("credits");
-		var svg = this.creditImage.find("svg");
-		var imw = jQuery.fn.imagesActivesBasic.settings.deploymentMode == "embed" ? this.creditImage
-				.find("svg").get(0).width.baseVal.value
-				: this.creditImage.get(0).width;
-		var imh = jQuery.fn.imagesActivesBasic.settings.deploymentMode == "embed" ? this.creditImage
-				.find("svg").get(0).height.baseVal.value
-				: this.creditImage.get(0).height;
-		this.creditImageProportion = imw / imh;
-		console.log(this.creditImageProportion)
-		this.resizeImageByWidth = this.creditImageProportion > (this.imageWidth / this.imageHeight);
+		this.evaluateProportions();
 
 		this.creditPanel.append(this.creditPanelCloseButton).append(
 				this.creditImage);
 		jQuery(this.footer).after(this.creditPanel);
 		this.displayCreditPanel(false)
+	},
+	evaluateProportions : function() {
+		var svg = this.creditImage.find("svg");
+		var imw = jQuery.fn.imagesActivesBasic.settings.embedSvgIcons == "embed" ? svg.get(0).width.baseVal.value
+				: this.creditImage.get(0).width;
+		var imh = jQuery.fn.imagesActivesBasic.settings.embedSvgIcons == "embed" ? svg.get(0).height.baseVal.value
+				: this.creditImage.get(0).height;
+		this.creditImageProportion = imw / imh;
+		this.resizeImageByWidth = this.creditImageProportion > (this.imageWidth / this.imageHeight);
 	},
 	displayCreditPanel : function(bool) {
 		if (!bool) {
@@ -787,6 +825,8 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		this.headerHandleDown = this
 				.createVectorImage("bouton-header-handle-down");
 		this.headerHandleDown.attr("class", "bouton-header-handle");
+		this.headerHandleDown.css("opacity",
+				jQuery.fn.imagesActivesBasic.settings.handleOpacity);
 		this.header.after(this.headerHandleUp);
 		this.header.after(this.headerHandleDown);
 		this.updateHeaderHandleIcon();
@@ -801,6 +841,8 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 	createFooterHandle : function() {
 		this.footerHandleUp = this.createVectorImage("bouton-footer-handle-up");
 		this.footerHandleUp.attr("class", "bouton-footer-handle");
+		this.footerHandleUp.css("opacity",
+				jQuery.fn.imagesActivesBasic.settings.handleOpacity);
 		this.footerHandleDown = this
 				.createVectorImage("bouton-footer-handle-down");
 		this.footerHandleDown.attr("class", "bouton-footer-handle");
@@ -828,16 +870,16 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		return button;
 	},
 	createHeaderScrollArrows : function() {
-		this.leftScrollArrow = this.createHeaderScrollArrow("element-fleche-g")
+		this.leftScrollArrow = this.createHeaderScrollArrow("element-fleche-g");
 		this.rightScrollArrow = this
-				.createHeaderScrollArrow("element-fleche-d")
+				.createHeaderScrollArrow("element-fleche-d");
 		this.title.before(this.leftScrollArrow);
 		this.title.after(this.rightScrollArrow);
 
 	},
 	createHeaderScrollArrow : function(uriImg) {
 		var button = this.createVectorImage(uriImg);
-		button.addClass("scroll-arrow")
+		button.addClass("scroll-arrow");
 		return button;
 	},
 	createTextBox : function() {
@@ -889,10 +931,10 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		var w = this.imageWidth * this.scaleFactor;
 		var h = this.imageHeight * this.scaleFactor;
 		var marginH = (window.innerWidth - w) / 2;
-		var marginV = (window.innerHeight - h) / 2;
+		var marginV = (window.innerHeight - h - jQuery.fn.imagesActivesBasic.settings.topBar) / 2;
 		this.container.css("left", Math.max(0, marginH));
 
-		this.container.css("top", Math.max(0, marginV));
+		this.container.css("top", this.topMargin + Math.max(0, marginV));
 		this.container.css("clip", "rect(0px, 0px, " + w + "px, " + h + "px)");
 
 	},
@@ -921,8 +963,10 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 	},
 	isDetail : function(node) {
 		return node && node.id != undefined
-				&& node.id.match(jQuery.fn.imagesActivesBasic.patterns.DETAIL);
+				&& node.id.match(jQuery.fn.imagesActivesBasic.patterns.DETAIL)
+				&& !node.hasAttribute("empty");
 	},
+
 	isNavbarKey : function(node) {
 		return node
 				&& node.id != undefined
@@ -1011,9 +1055,11 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 		this.answerButton.toggle(bool);
 	},
 	displayPasswordInput : function(bool) {
-		this.passwordInput.toggle(bool)
+		if (!this.passwordInput)
+			return;
+		this.passwordInput.toggle(bool);
 		if (!bool)
-			this.passwordInput.keypad('hide')
+			this.passwordInput.keypad('hide');
 		else {
 			this.passwordInput.val('');
 
@@ -1022,9 +1068,9 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 	createAnswerButton : function() {
 		this.answerButton = jQuery(document.createElement("input"));
 		this.answerButton.attr("value", this.dao
-				.getSpecificText("answer_button"))
-		this.answerButton.attr("type", "button")
-		this.answerButton.addClass("answer_button")
+				.getSpecificText("answer_button"));
+		this.answerButton.attr("type", "button");
+		this.answerButton.addClass("answer_button");
 		return this.answerButton;
 	},
 	createPasswordInput : function() {
@@ -1108,7 +1154,11 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 			}
 	},
 	handleUserAction : function(event) {
-		var detail = this.lookForDetail(event.target);
+		var target = (this.mobile && event.touches) ? event.touches[0].target
+				: event.target;
+		if (event.type == "touchmove")
+			target = document.elementFromPoint(event.pageX, event.pageY);
+		var detail = this.lookForDetail(target);
 		if (!detail)
 			if (this.isNavbarKey(event.target)) {
 				this
@@ -1119,11 +1169,17 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 
 		switch (event.type) {
 		case "mouseover":
+		case "touchmove":
 			if (detail)
 				this.dispatchEvent(
 						jQuery.fn.imagesActivesBasic.userEvents.HOVER_DETAIL, {
 							detailId : detail.id
-						})
+						});
+			else
+				this
+						.dispatchEvent(
+								jQuery.fn.imagesActivesBasic.userEvents.UNSELECT_DETAIL,
+								{});
 
 			break;
 		case "gesturestart":
@@ -1135,7 +1191,12 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 			this.yDepartTouche = event.pageY;
 			this.xDepartTouche = event.pageX;
 		case "mousedown":
-		case "touchmove":
+			
+			if (event.target==this.creditImage.get(0)) {
+				window.open('http://www.crdp.ac-versailles.fr');
+				return;
+			} else if(this.creditPanel.is(":visible"))
+				this.displayCreditPanel(false);
 			if ($(event.target).hasClass("keypad-popup")
 					|| $(event.target).hasClass("keypad-key")
 					|| $(event.target).hasClass("keypad-row")) {
@@ -1199,7 +1260,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 				if (this.mobile)
 					event.preventDefault();
 				this
-						.dispatchEvent(jQuery.fn.imagesActivesBasic.userEvents.DISPLAY_ALL_DETAILS)
+						.dispatchEvent(jQuery.fn.imagesActivesBasic.userEvents.DISPLAY_ALL_DETAILS);
 				return;
 			case jQuery.fn.imagesActivesBasic.UI.buttons.DESCRIPTION:
 				if (this.mobile)
@@ -1228,10 +1289,10 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 			case null:
 				break;
 			case this.leftScrollArrow:
-				this.scrollTitle("left")
+				this.scrollTitle("left");
 				break;
 			case this.rightScrollArrow:
-				this.scrollTitle("right")
+				this.scrollTitle("right");
 				break;
 			}
 
@@ -1280,14 +1341,13 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 						jQuery.fn.imagesActivesBasic.userEvents.SELECT_DETAIL,
 						{
 							detailId : detail.id
-						})
+						});
 			else if (event.target != this.textBox.get(0)
 					&& event.target.parentElement != this.textBox.get(0))
 				this
 						.dispatchEvent(
 								jQuery.fn.imagesActivesBasic.userEvents.CLICK_OUTSIDE_DETAIL,
-								{})
-
+								{});
 			break;
 		case "mouseout":
 			if (detail)
@@ -1296,7 +1356,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 								jQuery.fn.imagesActivesBasic.userEvents.UNSELECT_DETAIL,
 								{
 									detailId : detail.id
-								})
+								});
 			break;
 		}
 
@@ -1329,7 +1389,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 					bool ? 1 : 0);
 			this.detailOpacity(detail, bool ? 1 : 0);
 		} else {
-			this.hideShader()
+			this.hideShader();
 			detail.setAttribute('filter', bool ? "url(#dropshadow)" : "");
 		}
 
@@ -1454,7 +1514,7 @@ jQuery.fn.imagesActivesBasic.UI.prototype = {
 	},
 	createVectorImage : function(key) {
 		var image;
-		if (jQuery.fn.imagesActivesBasic.settings.deploymentMode == "noembed") {
+		if (jQuery.fn.imagesActivesBasic.settings.embedSvgIcons == "noembed") {
 			image = jQuery(document.createElement("img"));
 			image.attr("src", "img/" + key + ".svg");
 		} else {
@@ -1596,7 +1656,7 @@ jQuery.fn.imagesActivesBasic.DefaultState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.DefaultState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
@@ -1637,7 +1697,7 @@ jQuery.fn.imagesActivesBasic.EmphasisOneState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.EmphasisOneState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
@@ -1655,11 +1715,29 @@ jQuery.fn.imagesActivesBasic.EmphasisOneState.prototype = {
 			break;
 		case jQuery.fn.imagesActivesBasic.userEvents.SELECT_DETAIL:
 			if (event.detailId == this.control.selectedDetailId) {
-				if (this.dao.getInteractivityType() == "discovery")
-					this.control.switchState("DETAIL_CAPTION");
-				else if (this.dao.getInteractivityType() == "quiz")
+				if (this.dao.getInteractivityType() == "discovery") {
+					var title = this.dao
+							.getDetailTitle(this.control.selectedDetailId);
+					var desc = this.dao
+							.getDetailDesc(this.control.selectedDetailId);
+					var noCaption = (title + desc).match(/^\s*$/);
+					if (noCaption) {
+						if (this.ui
+								.isDetailZoomable(this.control.selectedDetailId))
+							this.control.switchState("ZOOM");
+					}
+
+					else
+						this.control.switchState("DETAIL_CAPTION");
+				} else if (this.dao.getInteractivityType() == "quiz")
 					this.control.switchState("DETAIL_QUESTION");
 			} else {
+				this.control.selectedDetailId = event.detailId;
+				this.control.switchState("EMPHASIS_ONE");
+			}
+			break;
+		case jQuery.fn.imagesActivesBasic.userEvents.HOVER_DETAIL:
+			if (event.detailId != this.control.selectedDetailId) {
 				this.control.selectedDetailId = event.detailId;
 				this.control.switchState("EMPHASIS_ONE");
 			}
@@ -1678,10 +1756,14 @@ jQuery.fn.imagesActivesBasic.DetailCaptionState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.DetailCaptionState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
+		case jQuery.fn.imagesActivesBasic.userEvents.UNSELECT_DETAIL:
+			if (this.ui.mobile)
+				this.control.switchState("DEFAULT");
+			break;
 		case jQuery.fn.imagesActivesBasic.userEvents.CLICK_OUTSIDE_DETAIL:
 			this.control.switchState("DEFAULT");
 			break;
@@ -1718,9 +1800,11 @@ jQuery.fn.imagesActivesBasic.DetailCaptionState.prototype = {
 			this.ui.emphasizeAllDetails(false);
 			this.ui.emphasizeDetail(this.control.selectedDetailId, true);
 		}
-		this.ui.displayCaption(this.control.selectedDetailId, this.dao
-				.getDetailTitle(this.control.selectedDetailId), this.dao
-				.getDetailDesc(this.control.selectedDetailId))
+		var title = this.dao.getDetailTitle(this.control.selectedDetailId);
+		var desc = this.dao.getDetailDesc(this.control.selectedDetailId);
+		var noCaption = (title + desc).match(/^\s*$/);
+		if (!noCaption)
+			this.ui.displayCaption(this.control.selectedDetailId, title, desc)
 	},
 	quit : function() {
 		this.ui.hideCaption();
@@ -1730,10 +1814,14 @@ jQuery.fn.imagesActivesBasic.DetailQuestionState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.DetailQuestionState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
+		case jQuery.fn.imagesActivesBasic.userEvents.UNSELECT_DETAIL:
+			if (this.ui.mobile)
+				this.control.switchState("DEFAULT");
+			break;
 		case jQuery.fn.imagesActivesBasic.userEvents.CLICK_OUTSIDE_DETAIL:
 			this.control.switchState("DEFAULT");
 			break;
@@ -1819,7 +1907,7 @@ jQuery.fn.imagesActivesBasic.OverallCaptionState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.OverallCaptionState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
@@ -1881,7 +1969,7 @@ jQuery.fn.imagesActivesBasic.MetadataState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.MetadataState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
@@ -1930,7 +2018,7 @@ jQuery.fn.imagesActivesBasic.ZoomState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.ZoomState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
@@ -1968,7 +2056,7 @@ jQuery.fn.imagesActivesBasic.EmphasisAllState = function(control, ui, dao) {
 	this.control = control;
 	this.ui = ui;
 	this.dao = dao;
-}
+};
 jQuery.fn.imagesActivesBasic.EmphasisAllState.prototype = {
 	handleUserEvent : function(event) {
 		switch (event.type) {
